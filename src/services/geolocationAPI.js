@@ -1,4 +1,5 @@
 import { WeatherAPI } from './weatherAPI';
+import { withCache, generateCacheKey } from '../utils/cache';
 
 export class GeolocationAPI {
   constructor() {
@@ -49,39 +50,45 @@ export class GeolocationAPI {
 
   // Converter coordenadas em nome da cidade (reverse geocoding)
   async getLocationName(latitude, longitude) {
-    try {
-      // Open-Meteo reverse geocoding endpoint
-      const response = await fetch(
-        `${this.weatherAPI.geocodingURL}/reverse?latitude=${latitude}&longitude=${longitude}&count=1&language=pt&format=json`
-      );
-      const data = await response.json();
-      
-      if (data.results && data.results.length > 0) {
-        const location = data.results[0];
-        return {
-          name: location.name,
-          latitude: location.latitude,
-          longitude: location.longitude,
-          country: location.country || 'Brasil',
-          admin1: location.admin1 || '',
-          admin2: location.admin2 || ''
-        };
-      }
-      
-      return null;
-    } catch (error) {
-      console.error('Erro ao buscar nome da localização:', error);
-      return null;
-    }
+    const cacheKey = generateCacheKey('reverse-geo', latitude.toFixed(4), longitude.toFixed(4));
+    
+    return await withCache(
+      cacheKey,
+      async () => {
+        // Open-Meteo reverse geocoding endpoint
+        const response = await fetch(
+          `${this.weatherAPI.geocodingURL}/reverse?latitude=${latitude}&longitude=${longitude}&count=1&language=pt&format=json`
+        );
+        const data = await response.json();
+        
+        if (data.results && data.results.length > 0) {
+          const location = data.results[0];
+          return {
+            name: location.name,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            country: location.country || 'Brasil',
+            admin1: location.admin1 || '',
+            admin2: location.admin2 || ''
+          };
+        }
+        
+        return null;
+      },
+      'location'
+    );
   }
 
   // Função completa: obter localização atual + nome da cidade
   async getCurrentLocationWithName() {
+    // Não cachear a geolocalização GPS (sempre obter coordenadas frescas)
+    // Mas cachear o reverse geocoding
+    
     try {
-      // Primeiro obtém as coordenadas
+      // Primeiro obtém as coordenadas (sempre fresh)
       const coordinates = await this.getCurrentLocation();
       
-      // Depois converte em nome da cidade
+      // Depois converte em nome da cidade (com cache)
       const locationData = await this.getLocationName(
         coordinates.latitude, 
         coordinates.longitude

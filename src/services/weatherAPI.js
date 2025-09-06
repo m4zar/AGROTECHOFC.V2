@@ -1,4 +1,6 @@
 // Serviço simples para API do clima
+import { withCache, generateCacheKey } from '../utils/cache';
+
 export class WeatherAPI {
   constructor() {
     this.baseURL = 'https://api.open-meteo.com/v1';
@@ -7,45 +9,51 @@ export class WeatherAPI {
 
   // Busca coordenadas de uma cidade
   async searchLocation(cityName) {
-    try {
-      const response = await fetch(
-        `${this.geocodingURL}/search?name=${encodeURIComponent(cityName)}&count=1&language=pt&format=json`
-      );
-      const data = await response.json();
-      return data.results?.[0] || null;
-    } catch (error) {
-      console.error('Erro ao buscar localização:', error);
-      return null;
-    }
+    const cacheKey = generateCacheKey('location', cityName.toLowerCase());
+    
+    return await withCache(
+      cacheKey,
+      async () => {
+        const response = await fetch(
+          `${this.geocodingURL}/search?name=${encodeURIComponent(cityName)}&count=1&language=pt&format=json`
+        );
+        const data = await response.json();
+        return data.results?.[0] || null;
+      },
+      'location'
+    );
   }
 
   // Busca dados climáticos atuais e previsão
   async getWeatherData(latitude, longitude, timeRange = '24h') {
-    try {
-      // Calcular forecast_hours baseado no timeRange
-      let forecastHours = 24;
-      if (timeRange === '48h') forecastHours = 48;
-      if (timeRange === '7d') forecastHours = 168; // 7 * 24
+    const cacheKey = generateCacheKey('weather', latitude.toFixed(2), longitude.toFixed(2), timeRange);
+    
+    return await withCache(
+      cacheKey,
+      async () => {
+        // Calcular forecast_hours baseado no timeRange
+        let forecastHours = 24;
+        if (timeRange === '48h') forecastHours = 48;
+        if (timeRange === '7d') forecastHours = 168; // 7 * 24
 
-      const params = new URLSearchParams({
-        latitude: latitude,
-        longitude: longitude,
-        current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
-        daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum',
-        hourly: 'temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation',
-        timezone: 'America/Sao_Paulo',
-        forecast_days: 7,
-        forecast_hours: forecastHours
-      });
+        const params = new URLSearchParams({
+          latitude: latitude,
+          longitude: longitude,
+          current: 'temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code',
+          daily: 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum',
+          hourly: 'temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation',
+          timezone: 'America/Sao_Paulo',
+          forecast_days: 7,
+          forecast_hours: forecastHours
+        });
 
-      const response = await fetch(`${this.baseURL}/forecast?${params}`);
-      const data = await response.json();
-      
-      return this.formatWeatherData(data, timeRange);
-    } catch (error) {
-      console.error('Erro ao buscar dados climáticos:', error);
-      return null;
-    }
+        const response = await fetch(`${this.baseURL}/forecast?${params}`);
+        const data = await response.json();
+        
+        return this.formatWeatherData(data, timeRange);
+      },
+      'weather'
+    );
   }
 
   // Formata os dados da API
@@ -138,24 +146,28 @@ export class WeatherAPI {
 
   // Busca dados de um dia específico
   async getSpecificDayData(latitude, longitude, date) {
-    try {
-      const params = new URLSearchParams({
-        latitude: latitude,
-        longitude: longitude,
-        start_date: date, // YYYY-MM-DD
-        end_date: date,   // YYYY-MM-DD  
-        hourly: 'temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation',
-        timezone: 'America/Sao_Paulo'
-      });
-      
-      const response = await fetch(`${this.baseURL}/forecast?${params}`);
-      const data = await response.json();
-      
-      return this.formatDayData(data, date);
-    } catch (error) {
-      console.error('Erro ao buscar dados do dia:', error);
-      return null;
-    }
+    const cacheKey = generateCacheKey('weather-day', latitude.toFixed(2), longitude.toFixed(2), date);
+    
+    return await withCache(
+      cacheKey,
+      async () => {
+        const params = new URLSearchParams({
+          latitude: latitude,
+          longitude: longitude,
+          start_date: date, // YYYY-MM-DD
+          end_date: date,   // YYYY-MM-DD  
+          hourly: 'temperature_2m,relative_humidity_2m,wind_speed_10m,precipitation',
+          timezone: 'America/Sao_Paulo'
+        });
+        
+        const response = await fetch(`${this.baseURL}/forecast?${params}`);
+        const data = await response.json();
+        
+        return this.formatDayData(data, date);
+      },
+      'weather',
+      20 * 60 * 1000 // 20 minutos para dados de um dia específico
+    );
   }
 
   // Formata dados de um dia específico

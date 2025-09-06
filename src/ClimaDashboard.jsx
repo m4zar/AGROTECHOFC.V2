@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { WeatherAPI } from './services/weatherAPI';
 import { useLocation } from './contexts/LocationContext';
+import { useCache } from './utils/cache';
 import LocationSearch from './components/LocationSearch.jsx';
 import WeatherCard from './components/WeatherCard.jsx';
 import WeatherChart from './components/WeatherChart.jsx';
