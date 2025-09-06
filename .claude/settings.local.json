@@ -1,0 +1,25 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Read(/var/folders/vk/9ss2jhfj6nv_t8x1mjjk2j3m0000gn/T/TemporaryItems/NSIRD_screencaptureui_SpaGGo/**)",
+      "Bash(curl:*)",
+      "Read(/var/folders/vk/9ss2jhfj6nv_t8x1mjjk2j3m0000gn/T/TemporaryItems/NSIRD_screencaptureui_v1idS9/**)",
+      "Read(/Users/lorenzobona/Downloads/agroinfo-react/src/**)",
+      "Bash(npm create:*)",
+      "Bash(npm install)",
+      "Bash(npm install:*)",
+      "Bash(npx tailwindcss init:*)",
+      "Bash(node_modules/.bin/tailwindcss init:*)",
+      "Bash(mkdir:*)",
+      "Bash(npm run dev:*)",
+      "Read(//var/folders/vk/9ss2jhfj6nv_t8x1mjjk2j3m0000gn/T/TemporaryItems/NSIRD_screencaptureui_FN4hvg/**)",
+      "Bash(open http://localhost:5173/)",
+      "Bash(open dashboard.html)",
+      "Bash(open index.html)",
+      "Bash(open http://localhost:5174/)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

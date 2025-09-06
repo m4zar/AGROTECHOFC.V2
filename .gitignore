@@ -1,0 +1,19 @@
+# Sistema
+.DS_Store
+
+# Node / Vite / React / Next
+node_modules/
+dist/
+build/
+.cache/
+.vite/
+.next/
+out/
+*.log
+
+# Env / Segredos
+.env
+.env.local
+.env.*
+*.pem
+*.key
