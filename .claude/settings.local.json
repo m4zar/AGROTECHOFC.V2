@@ -17,7 +17,8 @@
       "Bash(open http://localhost:5173/)",
       "Bash(open dashboard.html)",
       "Bash(open index.html)",
-      "Bash(open http://localhost:5174/)"
+      "Bash(open http://localhost:5174/)",
+      "Bash(open http://localhost:5175/)"
     ],
     "deny": [],
     "ask": []
